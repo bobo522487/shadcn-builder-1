@@ -2,12 +2,12 @@
 import React, { useCallback, useMemo } from "react";
 import { ComponentRegistry, Renderer, type FormSchema, type ComponentNode } from "@shadcn-builder/renderer";
 import { useDesignerStore } from "./state/store";
+import { useSchemaCommands } from "./state/commands";
 import { DndContext, PointerSensor, useSensor, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Copy, GripVertical, Trash2 } from "lucide-react";
-import { computeRows, GRID_COLUMNS, getSpan, rebalanceAfterMove } from "./utils/grid";
-import { duplicateNode, findComponent, removeComponent } from "./utils/schema";
+import { computeRows, GRID_COLUMNS, getSpan } from "./utils/grid";
 
 const viewportEditorStyles: Record<"sm" | "md" | "lg", string> = {
   sm: "w-[360px]",
@@ -89,9 +89,9 @@ function SortableCard({ node, selected, onSelect, onDuplicate, onDelete, childre
 
 export function Canvas({ registry, viewport }: { registry: ComponentRegistry; viewport: "sm" | "md" | "lg" }) {
   const schema = useDesignerStore((state) => state.schema);
-  const setSchema = useDesignerStore((state) => state.setSchema);
   const selectedId = useDesignerStore((state) => state.selectedId);
   const select = useDesignerStore((state) => state.select);
+  const { reorder, duplicate, remove, clearSelection } = useSchemaCommands();
 
   const ids = useMemo(() => schema.components.map((component) => component.id), [schema.components]);
   const rows = useMemo(() => computeRows(schema.components), [schema.components]);
@@ -101,49 +101,36 @@ export function Canvas({ registry, viewport }: { registry: ComponentRegistry; vi
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
-      if (!over || active.id === over.id) return;
+      if (!over) {
+        if (selectedId === active.id) clearSelection();
+        return;
+      }
+      if (active.id === over.id) return;
       const fromIndex = ids.indexOf(active.id as string);
       const toIndex = ids.indexOf(over.id as string);
       if (fromIndex === -1 || toIndex === -1) return;
-      const reordered = rebalanceAfterMove(schema.components, fromIndex, toIndex);
-      setSchema({ ...schema, components: reordered }, { pushHistory: true });
+      reorder(fromIndex, toIndex);
     },
-    [ids, schema, setSchema]
+    [clearSelection, ids, reorder, selectedId]
   );
 
   const handleDuplicate = useCallback(
     (id: string) => {
-      const node = findComponent(schema, id);
-      if (!node) return;
-      const duplicated = duplicateNode(node, schema);
-      const index = schema.components.findIndex((component) => component.id === id);
-      const nextComponents = [
-        ...schema.components.slice(0, index + 1),
-        duplicated,
-        ...schema.components.slice(index + 1),
-      ];
-      setSchema({ ...schema, components: nextComponents }, { pushHistory: true });
-      select(duplicated.id);
+      duplicate(id);
     },
-    [schema, select, setSchema]
+    [duplicate]
   );
 
   const handleDelete = useCallback(
     (id: string) => {
-      const node = findComponent(schema, id);
-      if (!node) return;
-      const next = removeComponent(schema, id);
-      setSchema(next, { pushHistory: true });
-      if (selectedId === id) {
-        select(null);
-      }
+      remove(id);
     },
-    [schema, selectedId, select, setSchema]
+    [remove]
   );
 
   const handleBackgroundClick = useCallback(() => {
-    select(null);
-  }, [select]);
+    clearSelection();
+  }, [clearSelection]);
 
   return (
     <div className="flex justify-center">

@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import type { ComponentNode } from "@shadcn-builder/renderer";
-import { useDesignerStore } from "../state/store";
+import { useSchemaCommands } from "../state/commands";
 
 interface PaletteItem {
   label: string;
@@ -74,7 +74,7 @@ function PaletteGroup({ title, items, onInsert }: { title: string; items: Palett
 }
 
 export function LeftPanel() {
-  const insertNode = useDesignerStore((state) => state.insertNode);
+  const { insert } = useSchemaCommands();
   const [term, setTerm] = useState("");
 
   const filtered = useMemo(() => {
@@ -89,7 +89,7 @@ export function LeftPanel() {
   }, [term]);
 
   const handleInsert = (node: ComponentNode) => {
-    insertNode(node);
+    insert(node);
   };
 
   return (

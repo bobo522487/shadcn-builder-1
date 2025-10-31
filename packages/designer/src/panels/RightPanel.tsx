@@ -2,6 +2,7 @@
 import React from "react";
 import type { ComponentNode } from "@shadcn-builder/renderer";
 import { useDesignerStore } from "../state/store";
+import { useSchemaCommands } from "../state/commands";
 import { getSpan, GRID_COLUMNS, setSpan } from "../utils/grid";
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
@@ -33,9 +34,7 @@ function TextField({ label, value, onChange, placeholder = "" }: { label: string
 export function RightPanel() {
   const schema = useDesignerStore((state) => state.schema);
   const selectedId = useDesignerStore((state) => state.selectedId);
-  const updateSelected = useDesignerStore((state) => state.updateSelected);
-  const duplicateSelected = useDesignerStore((state) => state.duplicateSelected);
-  const removeSelected = useDesignerStore((state) => state.removeSelected);
+  const { update, duplicate, remove } = useSchemaCommands();
 
   const selected = schema.components.find((component) => component.id === selectedId);
 
@@ -48,28 +47,32 @@ export function RightPanel() {
   }
 
   const handleTextChange = (value: string) => {
-    updateSelected((node) => {
+    if (!selectedId) return;
+    update(selectedId, (node) => {
       node.properties = { ...(node.properties || {}), text: value } as ComponentNode["properties"];
       return node;
     });
   };
 
   const handlePlaceholderChange = (value: string) => {
-    updateSelected((node) => {
+    if (!selectedId) return;
+    update(selectedId, (node) => {
       node.attributes = { ...(node.attributes || {}), placeholder: value };
       return node;
     });
   };
 
   const handleClassNameChange = (value: string) => {
-    updateSelected((node) => {
+    if (!selectedId) return;
+    update(selectedId, (node) => {
       node.properties = { ...(node.properties || {}), className: value } as ComponentNode["properties"];
       return node;
     });
   };
 
   const handleSpanChange = (value: number) => {
-    updateSelected((node) => setSpan(node, value));
+    if (!selectedId) return;
+    update(selectedId, (node) => setSpan(node, value));
   };
 
   const span = getSpan(selected);
@@ -121,14 +124,14 @@ export function RightPanel() {
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={duplicateSelected}
+            onClick={() => selectedId && duplicate(selectedId)}
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
           >
             复制一份
           </button>
           <button
             type="button"
-            onClick={removeSelected}
+            onClick={() => selectedId && remove(selectedId)}
             className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:border-red-300 hover:bg-red-50"
           >
             删除组件

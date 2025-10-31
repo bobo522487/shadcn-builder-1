@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ComponentRegistry, type FormSchema } from "@shadcn-builder/renderer";
 import { useDesignerStore } from "./state/store";
+import { useSchemaCommands } from "./state/commands";
 import { LeftPanel } from "./panels/LeftPanel";
 import { RightPanel } from "./panels/RightPanel";
 import { Canvas } from "./Canvas";
@@ -33,6 +34,7 @@ export function Designer({
   const setSchema = useDesignerStore((state) => state.setSchema);
   const setViewport = useDesignerStore((state) => state.setViewport);
   const currentViewport = useDesignerStore((state) => state.viewport);
+  const { duplicate, remove, clearSelection } = useSchemaCommands();
 
   const [jsonVisible, setJsonVisible] = useState(Boolean(showJSON));
   const isControlled = value !== undefined;
@@ -82,19 +84,24 @@ export function Designer({
         state.redo();
         return;
       }
-      if (isMod && key === "d") {
+      if (isMod && key === "d" && state.selectedId) {
         event.preventDefault();
-        state.duplicateSelected();
+        duplicate(state.selectedId);
+        return;
+      }
+      if (key === "escape") {
+        event.preventDefault();
+        clearSelection();
         return;
       }
       if ((key === "delete" || key === "backspace") && state.selectedId) {
         event.preventDefault();
-        state.removeSelected();
+        remove(state.selectedId);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [clearSelection, duplicate, remove]);
 
   const schemaPreview = useMemo(() => JSON.stringify(schema, null, 2), [schema]);
 
