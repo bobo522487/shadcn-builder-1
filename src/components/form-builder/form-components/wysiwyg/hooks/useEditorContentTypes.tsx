@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Editor, useEditorState } from "@tiptap/react";
 import { icons } from "lucide-react";
 

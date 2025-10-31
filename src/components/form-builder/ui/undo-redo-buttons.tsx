@@ -178,7 +178,7 @@ export const UndoRedoButtons: React.FC<UndoRedoButtonsProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs opacity-70">
-                    <span>{snapshot.components.length} components</span>
+                    <span>{snapshot.schema.components.length} components</span>
                     <span>{formatTimestamp(snapshot.timestamp)}</span>
                   </div>
                 </div>

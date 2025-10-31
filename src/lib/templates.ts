@@ -1,9 +1,10 @@
 import { TemplateData } from "@/types/form-builder.types";
 import { loadTemplatePayload, RawTemplateEntry } from "@/services/template-service";
+import type { ComponentNode } from "@shadcn-builder/renderer";
 
 function toTemplateData(entry: RawTemplateEntry): TemplateData {
   return {
-    components: entry.components.map((component) => JSON.parse(JSON.stringify(component))),
+    components: entry.components.map((component) => JSON.parse(JSON.stringify(component)) as ComponentNode),
     formTitle: entry.formTitle,
     formDescription: entry.formDescription,
     tags: entry.tags ?? [],

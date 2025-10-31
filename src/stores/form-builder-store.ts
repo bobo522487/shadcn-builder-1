@@ -8,6 +8,7 @@ import {
   HistorySnapshot,
   HistoryState,
 } from "@/types/form-builder.types";
+import type { FormComponentModelInput } from "@/types/FormComponent.types";
 import { SubscriptionInfo, DEFAULT_HISTORY_SIZE } from "@/types/subscription.types";
 import { getHistorySize, canSaveSnapshot } from "@/lib/history-utils";
 import { createComponentId } from "@/lib/id";
@@ -129,7 +130,8 @@ export const useFormBuilderStore = create<FormBuilderStore>()((set, get) => ({
       selectedComponentId: newId,
     });
     get().saveSnapshot();
-    return new FormComponentModel(deepClone(newNode));
+    const modelInput = deepClone(newNode) as FormComponentModelInput;
+    return new FormComponentModel(modelInput);
   },
   removeComponent: (componentId) => {
     set((state) => {

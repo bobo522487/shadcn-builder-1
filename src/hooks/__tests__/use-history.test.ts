@@ -3,12 +3,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { useFormBuilderStore } from '../../stores/form-builder-store';
 import { useHistory } from '../../hooks/use-history';
+import type { HistorySnapshot, HistoryState } from '@/types/form-builder.types';
 
 // Mock the store for testing
 vi.mock('@/stores/form-builder-store');
 
 describe('useHistory', () => {
-  const mockStore = {
+  const mockStore: any = {
     undo: vi.fn(),
     redo: vi.fn(),
     canUndo: vi.fn(),
@@ -17,10 +18,10 @@ describe('useHistory', () => {
     clearHistory: vi.fn(),
     jumpToSnapshot: vi.fn(),
     history: {
-      snapshots: [],
+      snapshots: [] as HistorySnapshot[],
       currentIndex: -1,
       maxHistorySize: 50
-    },
+    } as HistoryState,
     subscriptionInfo: null
   };
 
@@ -58,7 +59,7 @@ describe('useHistory', () => {
       ],
       currentIndex: 1,
       maxHistorySize: 50
-    };
+    } as HistoryState;
 
     const { result } = renderHook(() => useHistory());
 
@@ -74,7 +75,7 @@ describe('useHistory', () => {
       snapshots: [],
       currentIndex: -1,
       maxHistorySize: 50
-    };
+    } as HistoryState;
 
     const { result } = renderHook(() => useHistory());
 
