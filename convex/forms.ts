@@ -2,11 +2,21 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { formComponentsSchema } from "./validators";
 
+const componentArg = v.object({
+  id: v.string(),
+  type: v.string(),
+  category: v.optional(v.string()),
+  attributes: v.optional(v.any()),
+  properties: v.optional(v.any()),
+  overrides: v.optional(v.any()),
+  children: v.optional(v.array(v.any())),
+});
+
 export const saveForm = mutation({
   args: {
     title: v.string(),
     description: v.optional(v.string()),
-    components: v.array(v.any()),
+    components: v.array(componentArg),
     tags: v.optional(v.array(v.string())),
     category: v.optional(v.string()),
     userId: v.optional(v.string()),
@@ -36,7 +46,7 @@ export const updateForm = mutation({
     id: v.id("forms"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
-    components: v.optional(v.array(v.any())),
+    components: v.optional(v.array(componentArg)),
     tags: v.optional(v.array(v.string())),
     category: v.optional(v.string()),
   },
