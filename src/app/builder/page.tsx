@@ -25,7 +25,7 @@ import { useForm } from "react-hook-form";
 import { cn, getGridRows, updateColSpans } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { useAuthState } from "@/hooks/use-auth";
-import { fetchTemplate } from "@/lib/templates";
+import { useTemplateLoader } from "@/hooks/useTemplateLoader";
 
 export default function FormBuilderPage() {
   const isMobile = useIsMobile();
@@ -44,6 +44,11 @@ export default function FormBuilderPage() {
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const { isLoading } = useAuthState();
+  const { loadTemplate } = useTemplateLoader({
+    onLoaded: (template, info) => {
+      applyTemplate(template, { templateKey: info.templateKey });
+    },
+  });
 
   const [draggingDOMElement, setDraggingDOMElement] =
     useState<HTMLElement | null>(null);
@@ -55,25 +60,22 @@ export default function FormBuilderPage() {
     const templateKey = searchParams.get("key");
 
     if (template && loadedTemplateId !== templateKey && !isLoadingTemplate) {
-      const run = async () => {
-        try {
-          const templateData = await fetchTemplate(template, templateKey || undefined);
-          applyTemplate(templateData, { templateKey: templateKey || undefined });
+      setIsLoadingTemplate(true);
+      loadTemplate(template, templateKey || undefined)
+        .then(() => {
           console.log(
             `Template loaded successfully: ${template}${templateKey ? ` (${templateKey})` : ""}`
           );
-        } catch (error) {
+        })
+        .catch((error) => {
           console.error("Error loading template:", error);
           window.location.href = "/";
-        } finally {
+        })
+        .finally(() => {
           setIsLoadingTemplate(false);
-        }
-      };
-
-      setIsLoadingTemplate(true);
-      run();
+        });
     }
-  }, [isLoadingTemplate, applyTemplate, loadedTemplateId, searchParams]);
+  }, [isLoadingTemplate, loadTemplate, loadedTemplateId, searchParams]);
 
   // Show welcome dialog when no template is loaded and no components exist
   useEffect(() => {

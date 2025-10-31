@@ -20,9 +20,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
+<<<<<<< HEAD
 import { generateFormCode } from "@/components/form-builder/helpers/generate-react-code";
 import { Pre } from "@/components/ui/pre";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+=======
+import { useTemplateLoader } from "@/hooks/useTemplateLoader";
+>>>>>>> d238181 (refactor: introduce schema domain and template loader)
 
 const viewportEditorStyles = {
   sm: "w-[370px]",
@@ -45,7 +49,7 @@ export default function PreviewPage({
     []
   );
 
-  const loadTemplate = useFormBuilderStore((state) => state.loadTemplate);
+  const applyTemplate = useFormBuilderStore((state) => state.applyTemplate);
   const loadedTemplate = useFormBuilderStore((state) => state.loadedTemplate);
   const updateMode = useFormBuilderStore((state) => state.updateMode);
   const updateViewport = useFormBuilderStore((state) => state.updateViewport);
@@ -53,6 +57,12 @@ export default function PreviewPage({
   const components = useFormBuilderStore((state) => state.components);
   const [formattedCode, setFormattedCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const { loadTemplate } = useTemplateLoader({
+    onLoaded: (template, info) => {
+      applyTemplate(template, { templateKey: info.templateKey });
+      updateMode("editor-preview");
+    },
+  });
   const { category, key } = use(params);
   // Store the components types used in the form
   const componentsTypesUsedInForm = useMemo(() => {
@@ -72,21 +82,16 @@ export default function PreviewPage({
     const templateKey = key;
 
     loadTemplate(template, templateKey || undefined)
-      .then((success) => {
-        if (success) {
-          console.log(
-            `Template loaded successfully: ${template}${templateKey ? ` (${templateKey})` : ""}`
-          );
-          updateMode("editor-preview");
-        } else {
-          window.location.href = "/";
-        }
+      .then(() => {
+        console.log(
+          `Template loaded successfully: ${template}${templateKey ? ` (${templateKey})` : ""}`
+        );
       })
       .catch((error) => {
         console.error("Error loading template:", error);
         window.location.href = "/";
       });
-  }, [loadTemplate, category, key, updateMode]);
+  }, [category, key, loadTemplate]);
 
 
   const handleCopy = async (text: string) => {

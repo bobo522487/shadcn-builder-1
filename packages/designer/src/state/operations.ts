@@ -1,36 +1,54 @@
 import type { ComponentNode, FormSchema } from "@shadcn-builder/renderer";
-import { cloneNode, duplicateNode, findComponent, prepareNodeForInsert } from "../utils/schema";
-import { rebalanceAfterMove } from "../utils/grid";
+import {
+  duplicateNodeAtPath,
+  findPathById,
+  insertNodeAtLocation,
+  NodeLocation,
+  removeNodeAtPath,
+  reorderNodes,
+  updateNodeAtPath,
+} from "../domain/schema";
+import { cloneNode } from "../utils/schema";
 
-export function insertComponent(schema: FormSchema, node: ComponentNode, index?: number): string {
-  const prepared = prepareNodeForInsert(node, schema);
-  const targetIndex = Math.min(Math.max(index ?? schema.components.length, 0), schema.components.length);
-  schema.components.splice(targetIndex, 0, prepared);
-  return prepared.id;
+export interface InsertOptions {
+  index?: number;
+  parentId?: string | null;
+}
+
+function resolveLocation(schema: FormSchema, options?: InsertOptions): NodeLocation {
+  if (!options?.parentId) {
+    return { parentPath: [], index: options?.index };
+  }
+  const parentPath = findPathById(schema, options.parentId);
+  if (!parentPath) {
+    console.warn(`Parent component ${options.parentId} not found, falling back to root insert`);
+    return { parentPath: [], index: options?.index };
+  }
+  return { parentPath, index: options?.index };
+}
+
+export function insertComponent(schema: FormSchema, node: ComponentNode, options?: InsertOptions): string {
+  return insertNodeAtLocation(schema, node, resolveLocation(schema, options));
 }
 
 export function updateComponent(schema: FormSchema, id: string, updater: (node: ComponentNode) => ComponentNode): void {
-  const index = schema.components.findIndex((component) => component.id === id);
-  if (index === -1) return;
-  schema.components[index] = updater(cloneNode(schema.components[index]));
+  const path = findPathById(schema, id);
+  if (!path) return;
+  updateNodeAtPath(schema, path, (node) => updater(cloneNode(node)));
 }
 
 export function removeComponentById(schema: FormSchema, id: string): boolean {
-  const index = schema.components.findIndex((component) => component.id === id);
-  if (index === -1) return false;
-  schema.components.splice(index, 1);
-  return true;
+  const path = findPathById(schema, id);
+  if (!path) return false;
+  return removeNodeAtPath(schema, path);
 }
 
 export function duplicateComponent(schema: FormSchema, id: string): string | null {
-  const target = findComponent(schema, id);
-  if (!target) return null;
-  const duplicated = duplicateNode(target, schema);
-  const index = schema.components.findIndex((component) => component.id === id);
-  schema.components.splice(index + 1, 0, duplicated);
-  return duplicated.id;
+  const path = findPathById(schema, id);
+  if (!path) return null;
+  return duplicateNodeAtPath(schema, path);
 }
 
 export function reorderComponents(schema: FormSchema, fromIndex: number, toIndex: number): void {
-  schema.components = rebalanceAfterMove(schema.components, fromIndex, toIndex);
+  reorderNodes(schema, [fromIndex], { parentPath: [], index: toIndex });
 }

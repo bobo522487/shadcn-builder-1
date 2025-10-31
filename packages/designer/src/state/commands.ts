@@ -15,8 +15,13 @@ interface SchemaCommandContext {
   getSelectedId: () => DesignerState["selectedId"];
 }
 
+export interface InsertCommandOptions {
+  index?: number;
+  parentId?: string | null;
+}
+
 export interface UseSchemaCommandsResult {
-  insert: (node: ComponentNode, options?: { index?: number }) => void;
+  insert: (node: ComponentNode, options?: InsertCommandOptions) => void;
   update: (id: string, updater: (node: ComponentNode) => ComponentNode) => void;
   remove: (id: string) => void;
   duplicate: (id: string) => void;
@@ -29,7 +34,7 @@ export function createSchemaCommands(context: SchemaCommandContext): UseSchemaCo
     insert(node, options) {
       let insertedId = "";
       context.setSchema((draft) => {
-        insertedId = insertComponent(draft, node, options?.index);
+        insertedId = insertComponent(draft, node, options);
       }, { pushHistory: true });
       if (insertedId) context.select(insertedId);
     },

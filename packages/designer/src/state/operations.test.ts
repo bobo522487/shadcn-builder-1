@@ -12,7 +12,7 @@ import { buildTestSchema } from "./test-utils";
 describe("operations", () => {
   it("insertComponent 在指定位置插入并返回 id", () => {
     const schema = buildTestSchema([{ id: "a" }, { id: "b" }]);
-    const insertedId = insertComponent(schema, { id: "c", type: "text" } as ComponentNode, 1);
+    const insertedId = insertComponent(schema, { id: "c", type: "text" } as ComponentNode, { index: 1 });
     expect(insertedId).toBe("c");
     expect(schema.components.map((c) => c.id)).toEqual(["a", "c", "b"]);
   });
