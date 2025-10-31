@@ -10,8 +10,9 @@ function fallbackRandomId(): string {
 
 export function createComponentId(prefix?: string): string {
   try {
-    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-      const uuid = crypto.randomUUID();
+    const cryptoApi = typeof globalThis !== "undefined" ? (globalThis as any).crypto : undefined;
+    if (cryptoApi && typeof cryptoApi.randomUUID === "function") {
+      const uuid = cryptoApi.randomUUID();
       return prefix ? `${prefix}-${uuid}` : uuid;
     }
   } catch (error) {

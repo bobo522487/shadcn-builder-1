@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { formComponentsSchema } from "./validators";
 
 export const saveForm = mutation({
   args: {
@@ -13,10 +14,12 @@ export const saveForm = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     
+    const components = formComponentsSchema.parse(args.components);
+
     const formId = await ctx.db.insert("forms", {
       title: args.title,
       description: args.description,
-      components: args.components,
+      components,
       tags: args.tags,
       category: args.category,
       userId: args.userId,
@@ -39,9 +42,15 @@ export const updateForm = mutation({
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
-    
-    await ctx.db.patch(id, {
+    const validatedUpdates = {
       ...updates,
+      ...(updates.components
+        ? { components: formComponentsSchema.parse(updates.components) }
+        : {}),
+    };
+
+    await ctx.db.patch(id, {
+      ...validatedUpdates,
       updatedAt: Date.now(),
     });
 
