@@ -1,0 +1,180 @@
+[00:00:02.335] Server  LOG      ✓ Ready in 1813ms
+[00:00:10.388] Server  ERROR    ⨯ ./apps/playground/app/renderer-demo/page.tsx:2:1
+Module not found: Can't resolve '@shadcn-builder/renderer'
+  1 | "use client";
+> 2 | import { Renderer, type FormSchema, createBasicRegistry } from "@shadcn-builder/renderer";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import React from "react";
+  4 |
+  5 | const registry = createBasicRegistry();
+
+
+
+Import traces:
+  Client Component Browser:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component Browser]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component SSR]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:00:12.144] Server  ERROR    ⨯ ./apps/playground/app/renderer-demo/page.tsx:2:1
+Module not found: Can't resolve '@shadcn-builder/renderer'
+  1 | "use client";
+> 2 | import { Renderer, type FormSchema, createBasicRegistry } from "@shadcn-builder/renderer";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import React from "react";
+  4 |
+  5 | const registry = createBasicRegistry();
+
+
+
+Import traces:
+  Client Component Browser:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component Browser]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component SSR]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:00:13.087] Browser ERROR   uncaughtError: Error: ./apps/playground/app/renderer-demo/page.tsx:2:1
+Module not found: Can't resolve '@shadcn-builder/renderer'
+  1 | "use client";
+> 2 | import { Renderer, type FormSchema, createBasicRegistry } from "@shadcn-builder/renderer";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import React from "react";
+  4 |
+  5 | const registry = createBasicRegistry();
+
+
+
+Import traces:
+  Client Component Browser:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component Browser]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component SSR]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:00:13.318] Browser ERROR   ./apps/playground/app/renderer-demo/page.tsx:2:1
+Module not found: Can't resolve '@shadcn-builder/renderer'
+  1 | "use client";
+> 2 | import { Renderer, type FormSchema, createBasicRegistry } from "@shadcn-builder/renderer";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import React from "react";
+  4 |
+  5 | const registry = createBasicRegistry();
+
+Import traces:
+  Client Component Browser:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component Browser]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component SSR]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:14.735] Browser ERROR   ./apps/playground/app/renderer-demo/page.tsx:2:1
+Module not found: Can't resolve '@shadcn-builder/renderer'
+  1 | "use client";
+> 2 | import { Renderer, type FormSchema, createBasicRegistry } from "@shadcn-builder/renderer";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import React from "react";
+  4 |
+  5 | const registry = createBasicRegistry();
+
+Import traces:
+  Client Component Browser:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component Browser]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/playground/app/renderer-demo/page.tsx [Client Component SSR]
+    ./apps/playground/app/renderer-demo/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:10.260] Server  LOG      ✓ Compiled in 37ms
+[00:01:59.569] Browser ERROR   uncaughtError: Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+[00:02:39.315] Server  LOG      ✓ Compiled in 16ms
+[00:02:39.319] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:03:48.408] Server  LOG      ✓ Compiled in 239ms
+[00:07:17.523] Server  LOG      ✓ Compiled in 46ms
+[00:09:44.468] Server  LOG      ✓ Compiled in 14ms
+[00:10:16.445] Server  LOG      ✓ Compiled in 22ms
+[00:12:45.416] Server  LOG      ✓ Compiled in 52ms
+[00:13:00.145] Server  LOG      ✓ Compiled in 14ms
+[00:13:13.784] Server  LOG      ✓ Compiled in 30ms
+[00:41:00.420] Server  LOG      ✓ Compiled in 12ms
+[00:42:21.786] Server  LOG      ✓ Compiled in 79ms
+[00:42:40.309] Server  LOG      ✓ Compiled in 28ms
+[00:43:24.474] Server  LOG      ✓ Compiled in 148ms
+[00:44:58.915] Server  LOG      ✓ Compiled in 39ms
+[00:45:26.068] Server  LOG      ✓ Compiled in 14ms
+[00:45:26.482] Browser ERROR   The final argument passed to %s changed size between renders. The order and size of this array must remain constant.
+
+Previous: %s
+Incoming: %s useEffect [true, ] [true, , (payload, options)=>{
+            const pushHistory = options?.pushHistory ?? true;
+            const clearFuture = options?.clearFuture ?? pushHistory;
+            set((state)=>{
+                const current = state.schema;
+                const resolved = typeof payload === "function" ? payload(current) : payload;
+                const nextSchema = (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$designer$2f$src$2f$utils$2f$schema$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cloneSchema"])(resolved);
+                let nextHistory = state.history;
+                if (pushHistory) {
+                    nextHistory = pruneHistory(current, state.history, "past");
+                } else if (clearFuture && state.history.future.length) {
+                    nextHistory = {
+                        ...state.history,
+                        future: []
+                    };
+                }
+                const selectedId = ensureSelection(nextSchema, state.selectedId);
+                return {
+                    schema: nextSchema,
+                    history: nextHistory,
+                    selectedId
+                };
+            });
+        }]
+[00:45:26.482] Browser ERROR   The final argument passed to %s changed size between renders. The order and size of this array must remain constant.
+
+Previous: %s
+Incoming: %s useEffect [true, [object Object]] [true, [object Object], (payload, options)=>{
+            const pushHistory = options?.pushHistory ?? true;
+            const clearFuture = options?.clearFuture ?? pushHistory;
+            set((state)=>{
+                const current = state.schema;
+                const resolved = typeof payload === "function" ? payload(current) : payload;
+                const nextSchema = (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$designer$2f$src$2f$utils$2f$schema$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cloneSchema"])(resolved);
+                let nextHistory = state.history;
+                if (pushHistory) {
+                    nextHistory = pruneHistory(current, state.history, "past");
+                } else if (clearFuture && state.history.future.length) {
+                    nextHistory = {
+                        ...state.history,
+                        future: []
+                    };
+                }
+                const selectedId = ensureSelection(nextSchema, state.selectedId);
+                return {
+                    schema: nextSchema,
+                    history: nextHistory,
+                    selectedId
+                };
+            });
+        }]
+[00:45:35.684] Server  LOG      ✓ Compiled in 32ms

@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@shadcn-builder/renderer": ["../renderer/dist"],
+      "@shadcn-builder/renderer/*": ["../renderer/dist/*"]
+    }
+  },
+  "include": ["src"]
+}
