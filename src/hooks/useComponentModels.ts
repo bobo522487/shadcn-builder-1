@@ -13,14 +13,12 @@ export function useComponentModels(): FormComponentModel[] {
 }
 
 export function useSelectedComponentModel(): FormComponentModel | null {
-  const { schema, selectedComponentId } = useFormBuilderStore((state) => ({
-    schema: state.schema,
-    selectedComponentId: state.selectedComponentId,
-  }));
+  const selectedComponentId = useFormBuilderStore((state) => state.selectedComponentId);
+  const components = useFormBuilderStore((state) => state.schema.components);
 
   return useMemo(() => {
     if (!selectedComponentId) return null;
-    const node = schema.components.find((component) => component.id === selectedComponentId);
+    const node = components.find((component) => component.id === selectedComponentId);
     return node ? nodeToModel(node) : null;
-  }, [schema, selectedComponentId]);
+  }, [components, selectedComponentId]);
 }
