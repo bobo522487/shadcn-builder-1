@@ -22,6 +22,7 @@ import { AlignLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconPickerDialog } from "../../dialogs/icon-picker-dialog";
 import { Slider } from "@/components/ui/slider";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 type propertiesWhitelist =
   | "type"
@@ -47,8 +48,9 @@ export function InputGroup({
     "icon",
   ],
 }: InputGroupProps) {
-  const { updateComponent, selectedComponent, viewport } =
-    useFormBuilderStore();
+  const updateComponent = useFormBuilderStore((state) => state.updateComponent);
+  const viewport = useFormBuilderStore((state) => state.viewport);
+  const selectedComponent = useSelectedComponentModel();
 
   if (!selectedComponent) {
     return null;

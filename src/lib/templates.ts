@@ -1,10 +1,9 @@
-import { FormComponentModel } from "@/models/FormComponent";
 import { TemplateData } from "@/types/form-builder.types";
 import { loadTemplatePayload, RawTemplateEntry } from "@/services/template-service";
 
 function toTemplateData(entry: RawTemplateEntry): TemplateData {
   return {
-    components: entry.components.map((component) => new FormComponentModel(component as any)),
+    components: entry.components.map((component) => JSON.parse(JSON.stringify(component))),
     formTitle: entry.formTitle,
     formDescription: entry.formDescription,
     tags: entry.tags ?? [],

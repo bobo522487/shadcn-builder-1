@@ -65,9 +65,9 @@ export function LoadFormDialog({ children }: LoadFormDialogProps) {
 
     try {
       // Convert stored component data back to FormComponentModel instances
-      const components = selectedForm.components.map((componentData: any) => {
-        return new FormComponentModel(componentData);
-      });
+      const components = selectedForm.components.map((componentData: any) =>
+        JSON.parse(JSON.stringify(componentData))
+      );
 
 
       clearHistory();

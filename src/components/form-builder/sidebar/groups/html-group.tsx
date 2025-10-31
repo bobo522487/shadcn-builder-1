@@ -1,6 +1,7 @@
 import { useFormBuilderStore } from "@/stores/form-builder-store";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 type propertiesWhitelist = "id" | "name" | "class";
 
@@ -9,8 +10,9 @@ export type HtmlGroupProps = {
 };
 
 export function HtmlGroup({ whitelist = ["id", "name", "class"] }: HtmlGroupProps) {
-  const { updateComponent, selectedComponent, viewport } =
-    useFormBuilderStore();
+  const updateComponent = useFormBuilderStore((state) => state.updateComponent);
+  const viewport = useFormBuilderStore((state) => state.viewport);
+  const selectedComponent = useSelectedComponentModel();
 
   if (!selectedComponent) return null;
 

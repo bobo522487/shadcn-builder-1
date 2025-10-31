@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/landingpage/logo";
 import Link from "next/link";
 import { useFormBuilderStore } from "@/stores/form-builder-store";
+import { useComponentModels } from "@/hooks/useComponentModels";
 import { useMemo } from "react";
 import { UndoRedoButtons } from "../undo-redo-buttons";
 
@@ -26,7 +27,7 @@ export function FormBuilderHeader() {
   const viewport = useFormBuilderStore((state) => state.viewport);
   const showJson = useFormBuilderStore((state) => state.showJson);
   const editor = useFormBuilderStore((state) => state.editor);
-  const components = useFormBuilderStore((state) => state.components);
+  const components = useComponentModels();
   const formTitle = useFormBuilderStore((state) => state.formTitle);
 
   // Get actions from store

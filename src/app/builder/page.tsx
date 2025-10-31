@@ -26,6 +26,7 @@ import { cn, getGridRows, updateColSpans } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { useAuthState } from "@/hooks/use-auth";
 import { useTemplateLoader } from "@/hooks/useTemplateLoader";
+import { useComponentModels } from "@/hooks/useComponentModels";
 
 export default function FormBuilderPage() {
   const isMobile = useIsMobile();
@@ -38,7 +39,7 @@ export default function FormBuilderPage() {
     (state) => state.loadedTemplateId
   );
   const applyTemplate = useFormBuilderStore((state) => state.applyTemplate);
-  const components = useFormBuilderStore((state) => state.components);
+  const components = useComponentModels();
   const selectComponent = useFormBuilderStore((state) => state.selectComponent);
   const formTitle = useFormBuilderStore((state) => state.formTitle);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);

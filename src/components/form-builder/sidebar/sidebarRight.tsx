@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/collapsible";
 import { getCoponentSidebarOptions } from "@/config/available-components";
 import { ReactNode, useEffect, useState } from "react";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 interface PropertySectionProps {
   title: string;
@@ -56,7 +57,7 @@ const PROPERTY_SECTIONS = [
 ] as const;
 
 export function SidebarRight() {
-  const { selectedComponent } = useFormBuilderStore();
+  const selectedComponent = useSelectedComponentModel();
   const mode = useFormBuilderStore((state) => state.mode);
 
 

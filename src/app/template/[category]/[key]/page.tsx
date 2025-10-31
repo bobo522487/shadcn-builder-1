@@ -20,13 +20,11 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-<<<<<<< HEAD
 import { generateFormCode } from "@/components/form-builder/helpers/generate-react-code";
 import { Pre } from "@/components/ui/pre";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-=======
 import { useTemplateLoader } from "@/hooks/useTemplateLoader";
->>>>>>> d238181 (refactor: introduce schema domain and template loader)
+import { useComponentModels } from "@/hooks/useComponentModels";
 
 const viewportEditorStyles = {
   sm: "w-[370px]",
@@ -54,7 +52,7 @@ export default function PreviewPage({
   const updateMode = useFormBuilderStore((state) => state.updateMode);
   const updateViewport = useFormBuilderStore((state) => state.updateViewport);
   const viewport = useFormBuilderStore((state) => state.viewport);
-  const components = useFormBuilderStore((state) => state.components);
+  const components = useComponentModels();
   const [formattedCode, setFormattedCode] = useState("");
   const [copied, setCopied] = useState(false);
   const { loadTemplate } = useTemplateLoader({

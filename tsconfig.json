@@ -24,6 +24,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@shadcn-builder/renderer": [
+        "./packages/renderer/src/index.ts"
       ]
     },
     "target": "ES2017"

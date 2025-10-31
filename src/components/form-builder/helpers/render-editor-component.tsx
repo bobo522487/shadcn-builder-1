@@ -17,6 +17,7 @@ import { renderComponent } from "@/config/available-components";
 import { FormComponentModel } from "@/models/FormComponent";
 import { FormWysiwygEditor } from "../form-components/wysiwyg/form-wysiwyg-editor";
 import { useState } from "react";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 export interface FormComponentProps {
   form: UseFormReturn<FieldValues, undefined>;
@@ -24,13 +25,13 @@ export interface FormComponentProps {
 }
 
 export function RenderEditorComponent({ form, component }: FormComponentProps) {
-  const {
-    selectedComponent,
-    viewport,
-    updateComponent,
-    updateEnableDragging,
-    selectComponent,
-  } = useFormBuilderStore();
+  const { viewport, updateComponent, updateEnableDragging, selectComponent } = useFormBuilderStore((state) => ({
+    viewport: state.viewport,
+    updateComponent: state.updateComponent,
+    updateEnableDragging: state.updateEnableDragging,
+    selectComponent: state.selectComponent,
+  }));
+  const selectedComponent = useSelectedComponentModel();
   const mode = useFormBuilderStore((state) => state.mode);
 
   const labelPositionClasses = generateTWClassesForAllViewports(

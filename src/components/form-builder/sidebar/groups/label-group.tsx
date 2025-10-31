@@ -11,6 +11,7 @@ import {
 import { ToggleGroupNav } from "@/components/form-builder/ui/toggle-group-nav";
 import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { ViewportOverrideIndicator } from "@/components/form-builder/helpers/ViewportOverrideIndicator";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 type propertiesWhitelist = "label" | "label_description" | "labelPosition" | "labelAlign" | "showLabel";
 
@@ -19,8 +20,9 @@ export type LabelGroupProps = {
 };
 
 export function LabelGroup({ whitelist = ["label", "label_description", "labelPosition", "labelAlign", "showLabel"] }: LabelGroupProps) {
-  const { updateComponent, selectedComponent, viewport } =
-    useFormBuilderStore();
+  const updateComponent = useFormBuilderStore((state) => state.updateComponent);
+  const viewport = useFormBuilderStore((state) => state.viewport);
+  const selectedComponent = useSelectedComponentModel();
 
   if (!selectedComponent) {
     return null;

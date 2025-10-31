@@ -9,10 +9,12 @@ import {
 } from "@/components/ui/select";
 import { ViewportOverrideIndicator } from "@/components/form-builder/helpers/ViewportOverrideIndicator";
 import { ToggleGroupNav } from "@/components/form-builder/ui/toggle-group-nav";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 export function GridGroup() {
-  const { updateComponent, selectedComponent, viewport } =
-    useFormBuilderStore();
+  const updateComponent = useFormBuilderStore((state) => state.updateComponent);
+  const viewport = useFormBuilderStore((state) => state.viewport);
+  const selectedComponent = useSelectedComponentModel();
 
   if (!selectedComponent) {
     return null;

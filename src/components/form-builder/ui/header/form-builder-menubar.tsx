@@ -43,6 +43,7 @@ import { toast } from "sonner";
 import { LoadTemplateDialog } from "../../dialogs/load-template-dialog";
 import { useHistory } from "@/hooks/use-history";
 import { Play } from "lucide-react";
+import { useComponentModels, useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 interface FormBuilderMenubarProps {
   mode: "editor" | "preview" | "editor-preview" | "export";
@@ -53,8 +54,8 @@ export function FormBuilderMenubar({ mode }: FormBuilderMenubarProps) {
   const formTitle = useFormBuilderStore((state) => state.formTitle);
   const viewport = useFormBuilderStore((state) => state.viewport);
   const showJson = useFormBuilderStore((state) => state.showJson);
-  const selectedComponent = useFormBuilderStore((state) => state.selectedComponent);
-  const components = useFormBuilderStore((state) => state.components);
+  const selectedComponent = useSelectedComponentModel();
+  const components = useComponentModels();
   const { userForms, isLoading } = useSavedForms();
 
   // Get actions from store
@@ -73,15 +74,15 @@ export function FormBuilderMenubar({ mode }: FormBuilderMenubarProps) {
   const handleLoadRecentForm = async (form: any) => {
     try {
       // Convert stored component data back to FormComponentModel instances
-      const components = form.components.map((componentData: any) => {
-        return new FormComponentModel(componentData);
-      });
+      const componentNodes = form.components.map((componentData: any) =>
+        JSON.parse(JSON.stringify(componentData))
+      );
 
       clearHistory();
       updateFormId(form._id);
       updateFormTitle(form.title);
       updateMode("editor");
-      updateComponents(components);
+      updateComponents(componentNodes);
 
     } catch (error) {
       console.error("Error loading recent form:", error);

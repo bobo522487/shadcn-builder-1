@@ -1,9 +1,11 @@
 import { useFormBuilderStore } from "@/stores/form-builder-store";
 import { OptionsDialog } from "./dialogs/options-dialog";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 
 export function OptionsGroup() {
-  const { updateComponent, selectedComponent } = useFormBuilderStore();
+  const updateComponent = useFormBuilderStore((state) => state.updateComponent);
+  const selectedComponent = useSelectedComponentModel();
 
   if (!selectedComponent) {
     return null;

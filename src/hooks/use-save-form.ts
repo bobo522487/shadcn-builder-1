@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useFormBuilderStore } from "@/stores/form-builder-store";
 import { useAuthState } from "@/hooks/use-auth";
+import type { ComponentNode } from "@shadcn-builder/renderer";
 
 export function useSaveForm() {
   const [isSaving, setIsSaving] = useState(false);
@@ -10,7 +11,7 @@ export function useSaveForm() {
   const saveForm = useMutation(api.forms.saveForm);
   const updateForm = useMutation(api.forms.updateForm);
   
-  const components = useFormBuilderStore((state) => state.components);
+  const components = useFormBuilderStore((state) => state.schema.components);
   const formTitle = useFormBuilderStore((state) => state.formTitle);
   const formId = useFormBuilderStore((state) => state.formId);
 
@@ -28,7 +29,7 @@ export function useSaveForm() {
     setIsSaving(true);
     try {
       // Convert FormComponentModel instances to plain objects for storage
-      const componentsData = components.map(component => component.toJSON());
+      const componentsData = components.map((component) => JSON.parse(JSON.stringify(component)) as ComponentNode);
 
       // If formId exists and forceNew is not true, update the existing form
       if (formId && !options?.forceNew) {

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { CardContent } from "../ui/card";
 import { Card } from "../ui/card";
 import { FormComponentModel } from "@/models/FormComponent";
+import { useComponentModels, useSelectedComponentModel } from "@/hooks/useComponentModels";
 import { useDroppable } from "@dnd-kit/core";
 // Memoize static viewport styles
 const viewportEditorStyles = {
@@ -62,11 +63,9 @@ export function MainCanvas() {
   // Split store selectors to minimize re-renders
   const viewport = useFormBuilderStore((state) => state.viewport);
   const showJson = useFormBuilderStore((state) => state.showJson);
-  const selectedComponent = useFormBuilderStore(
-    (state) => state.selectedComponent
-  );
+  const selectedComponent = useSelectedComponentModel();
   const selectComponent = useFormBuilderStore((state) => state.selectComponent);
-  const components = useFormBuilderStore((state) => state.components);
+  const components = useComponentModels();
   const enableDragging = useFormBuilderStore((state) => state.enableDragging);
   const [currentComponents, setCurrentComponents] = useState<
     FormComponentModel[]

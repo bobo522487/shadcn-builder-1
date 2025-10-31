@@ -1,3 +1,4 @@
+import type { ComponentNode, FormSchema } from "@shadcn-builder/renderer";
 import { FormComponentModel } from "@/models/FormComponent";
 import { Editor } from "@tiptap/react";
 import { icons } from "lucide-react";
@@ -32,7 +33,7 @@ export type ReactCode = {
 };
 
 export type TemplateData = {
-  components: FormComponentModel[];
+  components: ComponentNode[];
   formTitle: string;
   formDescription: string;
   tags: string[];
@@ -40,7 +41,7 @@ export type TemplateData = {
 };
 
 export type HistorySnapshot = {
-  components: FormComponentModel[];
+  schema: FormSchema;
   formTitle: string;
   formId: string | null;
   timestamp: number;
@@ -64,21 +65,21 @@ export interface FormBuilderStore {
   enableDragging: boolean;
   history: HistoryState;
   subscriptionInfo: SubscriptionInfo | null;
+  schema: FormSchema;
+  selectedComponentId: string | null;
   updateMode: (mode: FormBuilderStore['mode']) => void;
   updateViewport: (viewport: Viewports) => void;
   toggleJsonPreview: () => void;
   updateFormTitle: (title: string) => void;
   updateFormId: (id: string) => void;
   setEditor: (editor: Editor | null) => void;
-  components: FormComponentModel[];
-  selectedComponent: FormComponentModel | null;
   updateEnableDragging: (enableDragging: boolean) => void;
-  addComponent: (component: FormComponentModel) => void;
+  addComponent: (component: FormComponentModel) => FormComponentModel;
   removeComponent: (componentId: string) => void;
   updateComponent: (componentId: string, field: string, value: any, isValidForAllViewports?: boolean, isDragging?: boolean) => void;
-  updateComponents: (components: FormComponentModel[]) => void;
-  selectComponent: (component: FormComponentModel | null) => void;
-  moveComponent: (oldIndex: number, newIndex: number) => void;
+  updateComponents: (components: ComponentNode[]) => void;
+  selectComponent: (componentId: string | null) => void;
+  moveComponent: (fromIndex: number, toIndex: number) => void;
   duplicateComponent: (componentId: string) => void;
   applyTemplate: (templateData: TemplateData, options?: { templateKey?: string }) => void;
   clearForm: () => void;

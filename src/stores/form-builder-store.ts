@@ -1,373 +1,367 @@
 import { create } from "zustand";
-import { FormBuilderStore, TemplateData, Viewports, HistorySnapshot, HistoryState } from "@/types/form-builder.types";
+import type { ComponentNode, FormSchema } from "@shadcn-builder/renderer";
 import { FormComponentModel } from "@/models/FormComponent";
-import { Editor } from "@tiptap/react";
+import {
+  FormBuilderStore,
+  TemplateData,
+  Viewports,
+  HistorySnapshot,
+  HistoryState,
+} from "@/types/form-builder.types";
 import { SubscriptionInfo, DEFAULT_HISTORY_SIZE } from "@/types/subscription.types";
 import { getHistorySize, canSaveSnapshot } from "@/lib/history-utils";
 import { createComponentId } from "@/lib/id";
+import { modelToNode } from "@/lib/component-node";
 
-const generateComponentId = (component: FormComponentModel): string => {
-  const prefix = component.getField("type") || "component";
-  return createComponentId(prefix);
-};
+const EMPTY_SCHEMA: FormSchema = { components: [] };
 
-// History management functions
-const createSnapshot = (components: FormComponentModel[], formTitle: string, formId: string | null): HistorySnapshot => ({
-  components: components.map(comp => new FormComponentModel({ ...comp })),
-  formTitle,
-  formId,
-  timestamp: Date.now()
-});
+function deepClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
 
-const initializeHistory = (subscriptionInfo?: SubscriptionInfo | null): HistoryState => ({
-  snapshots: [],
-  currentIndex: -1,
-  maxHistorySize: subscriptionInfo ? getHistorySize(subscriptionInfo) : DEFAULT_HISTORY_SIZE
-});
+function cloneSchema(schema: FormSchema): FormSchema {
+  return {
+    ...schema,
+    components: schema.components.map((component) => deepClone(component)),
+  };
+}
 
-export const useFormBuilderStore = create<FormBuilderStore>()(
-    (set, get) => ({
-      mode: "editor",
-      components: [],
-      selectedRow: null,
-      selectedComponent: null,
-      viewport: "sm",
-      showJson: false,
-      formId: null,
-      formTitle: "",
-      loadedTemplateId: null,
-      loadedTemplate: null,
-      editor: null,
-      enableDragging: true,
-      history: initializeHistory(),
-      subscriptionInfo: null,
-      updateMode: (mode: FormBuilderStore['mode']) => set({ mode }),
-      updateViewport: (viewport: Viewports) => set({ viewport }),
-      toggleJsonPreview: () => set((state) => ({ showJson: !state.showJson })),
-      updateFormTitle: (title: string) => set({ formTitle: title }),
-      updateFormId: (id: string) => set({ formId: id }),
-      updateEnableDragging: (enableDragging: boolean) =>
-        set({ enableDragging }),
-      setEditor: (editor: Editor | null) => set({ editor }),
-      addComponent: (component: FormComponentModel) => {
-        const newComponent = new FormComponentModel({ ...component });
-        let newId = generateComponentId(newComponent);
-        newComponent.id = newId;
-        newComponent.attributes = {
-          ...newComponent.attributes,
-          id: newComponent.id,
-        };
-        set((state) => {
-          return { components: [...state.components, newComponent] };
-        });
+function findComponentIndex(components: ComponentNode[], id: string): number {
+  return components.findIndex((component) => component.id === id);
+}
 
-        // Save snapshot after adding component
-        get().saveSnapshot();
-        return newComponent;
-      },
-      removeComponent: (componentId: string) => {
-        set((state) => {
-          return {
-            components: state.components.filter(
-              (component) => component.id !== componentId
-            ),
-            selectedComponent: state.selectedComponent?.id === componentId ? null : state.selectedComponent,
-          };
-        });
-        
-        // Save snapshot after removing component
-        get().saveSnapshot();
-      },
-      updateComponent: (
-        componentId: string,
-        field: string,
-        value: any,
-        isValidForAllViewports: boolean = false,
-        isDragging: boolean = false
-      ) => {
-        set((state) => {
-          const updateNestedField = (
-            obj: any,
-            path: string[],
-            value: any
-          ): any => {
-            if (path.length === 1) {
-              return { ...obj, [path[0]]: value };
-            }
-            const [current, ...rest] = path;
-            return {
-              ...obj,
-              [current]: updateNestedField(obj[current] || {}, rest, value),
-            };
-          };
+function setNestedValue(target: any, path: string[], value: any): any {
+  if (!path.length) {
+    return value;
+  }
+  const [key, ...rest] = path;
+  const current = target ?? {};
+  return {
+    ...current,
+    [key]: rest.length ? setNestedValue(current[key], rest, value) : value,
+  };
+}
 
-          const fieldPath = field.split(".");
-          const viewport = state.viewport;
-          let updatedComponent = null;
+function updateComponentNode(
+  component: ComponentNode,
+  fieldPath: string[],
+  value: any,
+  viewport: Viewports,
+  isValidForAll: boolean
+): ComponentNode {
+  const base = deepClone(component);
+  if (viewport !== "sm" && !isValidForAll) {
+    const overrides = { ...(base.overrides ?? {}) } as NonNullable<ComponentNode["overrides"]>;
+    const viewportOverrides = setNestedValue(overrides[viewport], fieldPath, value);
+    overrides[viewport] = viewportOverrides;
+    base.overrides = overrides;
+    return base;
+  }
+  return setNestedValue(base, fieldPath, value);
+}
 
-          return {
-            components: state.components.map((component) => {
-              if (component.id !== componentId) return component;
+function ensureSelection(schema: FormSchema, selectedId: string | null): string | null {
+  if (!selectedId) return null;
+  return schema.components.some((component) => component.id === selectedId) ? selectedId : null;
+}
 
-              updatedComponent = component;
+function createSnapshot(schema: FormSchema, formTitle: string, formId: string | null): HistorySnapshot {
+  return {
+    schema: cloneSchema(schema),
+    formTitle,
+    formId,
+    timestamp: Date.now(),
+  };
+}
 
-              // If viewport is not 'sm', update the overrides
-              if (viewport !== "sm" && !isValidForAllViewports) {
-                const overrides =
-                  component.overrides || ({} as Record<Viewports, any>);
-                const viewportOverrides = overrides[viewport] || {};
+function initializeHistory(subscriptionInfo?: SubscriptionInfo | null): HistoryState {
+  return {
+    snapshots: [],
+    currentIndex: -1,
+    maxHistorySize: subscriptionInfo ? getHistorySize(subscriptionInfo) : DEFAULT_HISTORY_SIZE,
+  };
+}
 
-                updatedComponent = new FormComponentModel({
-                  ...component,
-                  overrides: {
-                    ...overrides,
-                    [viewport]: updateNestedField(
-                      viewportOverrides,
-                      fieldPath,
-                      value
-                    ),
-                  },
-                });
-                return updatedComponent;
-              }
+function generateUniqueComponentId(component: ComponentNode, existing: ComponentNode[]): string {
+  const prefix = component.type || "component";
+  let candidate = createComponentId(prefix);
+  const ids = new Set(existing.map((item) => item.id));
+  while (ids.has(candidate)) {
+    candidate = createComponentId(prefix);
+  }
+  return candidate;
+}
 
-              // For 'sm' viewport, update the base component
-
-              const nestedField = updateNestedField(
-                component,
-                fieldPath,
-                value
-              );
-
-              updatedComponent = new FormComponentModel({
-                ...component,
-                ...nestedField,
-              });
-              return updatedComponent;
-            }),
-            selectedComponent: isDragging ? null : updatedComponent,
-          };
-        });
-
-        // Save snapshot after updating component (only when not dragging)
-        if (!isDragging) {
-          get().saveSnapshot();
-        }
-      },
-      updateComponents: (components: FormComponentModel[]) => {
-        set({ components });
-        // Save snapshot after updating components
-        get().saveSnapshot();
-      },
-      selectComponent: (component: FormComponentModel | null) =>
-        set(() => {
-          return {
-            selectedComponent: component
-              ? new FormComponentModel(component)
-              : null,
-            editor: component === null || component.category === "form" ? null : get().editor,
-          };
-        }),
-      moveComponent: (oldIndex: number, newIndex: number) => {
-        set((state) => {
-          const components = [...state.components];
-
-          if (oldIndex === undefined) {
-            oldIndex = components.length - 1;
-          }
-
-          const [movedComponent] = components.splice(oldIndex, 1);
-          components.splice(newIndex, 0, movedComponent);
-
-          return { components, selectedComponent: null };
-        });
-        
-        // Save snapshot after moving component
-        get().saveSnapshot();
-      },
-      duplicateComponent: (componentId: string) => {
-        const state = get();
-        const componentToDuplicate = state.components.find(comp => comp.id === componentId);
-        
-        if (!componentToDuplicate) {
-          console.warn(`Component with id ${componentId} not found for duplication`);
-          return;
-        }
-
-        // Create a deep copy of the component
-        const duplicatedComponent = new FormComponentModel({ ...componentToDuplicate });
-        
-        // Generate a new unique ID
-        const newId = generateComponentId(duplicatedComponent);
-        duplicatedComponent.id = newId;
-        duplicatedComponent.attributes = {
-          ...duplicatedComponent.attributes,
-          id: duplicatedComponent.id,
-        };
-
-        // Add the duplicated component to the form
-        set((state) => ({
-          components: [...state.components, duplicatedComponent],
-          selectedComponent: duplicatedComponent, // Select the newly duplicated component
-        }));
-        
-        // Save snapshot after duplicating component
-        get().saveSnapshot();
-      },
-      applyTemplate: (templateData: TemplateData, options?: { templateKey?: string }) => {
-        set({
-          components: templateData.components.map((component) => new FormComponentModel({ ...component })),
-          formTitle: templateData.formTitle,
-          selectedComponent: null,
-          mode: "editor",
-          loadedTemplateId: options?.templateKey ?? null,
-          loadedTemplate: templateData
-        });
-        
-        get().clearHistory();
-        get().saveSnapshot();
-      },
-      clearForm: () => {
-        set({
-          components: [],
-          selectedComponent: null,
-          mode: "editor",
-          loadedTemplateId: null,
-          loadedTemplate: null
-        });
-        
-        // Clear history and save initial snapshot when clearing form
-        get().clearHistory();
-        get().saveSnapshot();
-      },
-      // History methods
-      saveSnapshot: () => {
-        const state = get();
-        const snapshot = createSnapshot(state.components, state.formTitle, state.formId);
-        
-        set((state) => {
-          const newHistory = { ...state.history };
-          
-          // Check if we can save a new snapshot based on subscription limits
-          if (state.subscriptionInfo && !canSaveSnapshot(newHistory.snapshots.length, state.subscriptionInfo)) {
-            // If we can't save a new snapshot, remove the oldest one to make room
-            if (newHistory.snapshots.length > 0) {
-              newHistory.snapshots = newHistory.snapshots.slice(0, -1);
-              newHistory.currentIndex = Math.max(0, newHistory.currentIndex - 1);
-            }
-          }
-          
-          // Remove any snapshots after current index (when branching)
-          newHistory.snapshots = newHistory.snapshots.slice(newHistory.currentIndex);
-          
-          // Add new snapshot to the beginning (newest first)
-          newHistory.snapshots.unshift(snapshot);
-          newHistory.currentIndex = 0;
-          
-          // Update max history size based on current subscription
-          if (state.subscriptionInfo) {
-            newHistory.maxHistorySize = getHistorySize(state.subscriptionInfo);
-          }
-          
-          // Limit history size (fallback for non-subscription users)
-          if (newHistory.snapshots.length > newHistory.maxHistorySize) {
-            newHistory.snapshots = newHistory.snapshots.slice(0, newHistory.maxHistorySize);
-            // currentIndex remains 0 since we're keeping the newest snapshots
-          }
-          
-          return { history: newHistory };
-        });
-      },
-      undo: () => {
-        const state = get();
-        if (state.history.currentIndex < state.history.snapshots.length - 1) {
-          const newIndex = state.history.currentIndex + 1;
-          const snapshot = state.history.snapshots[newIndex];
-          
-          set({
-            components: snapshot.components.map(comp => new FormComponentModel({ ...comp })),
-            formTitle: snapshot.formTitle,
-            formId: snapshot.formId,
-            selectedComponent: null,
-            history: {
-              ...state.history,
-              currentIndex: newIndex
-            }
-          });
-          return true;
-        }
-        return false;
-      },
-      redo: () => {
-        const state = get();
-        if (state.history.currentIndex > 0) {
-          const newIndex = state.history.currentIndex - 1;
-          const snapshot = state.history.snapshots[newIndex];
-          
-          set({
-            components: snapshot.components.map(comp => new FormComponentModel({ ...comp })),
-            formTitle: snapshot.formTitle,
-            formId: snapshot.formId,
-            selectedComponent: null,
-            history: {
-              ...state.history,
-              currentIndex: newIndex
-            }
-          });
-          return true;
-        }
-        return false;
-      },
-      canUndo: () => {
-        const state = get();
-        return state.history.currentIndex < state.history.snapshots.length - 1;
-      },
-      canRedo: () => {
-        const state = get();
-        return state.history.currentIndex > 0;
-      },
-      clearHistory: () => {
-        const state = get();
-        set({
-          history: initializeHistory(state.subscriptionInfo)
-        });
-      },
-      jumpToSnapshot: (index: number) => {
-        const state = get();
-        if (index >= 0 && index < state.history.snapshots.length) {
-          const snapshot = state.history.snapshots[index];
-          
-          set({
-            components: snapshot.components.map(comp => new FormComponentModel({ ...comp })),
-            formTitle: snapshot.formTitle,
-            formId: snapshot.formId,
-            selectedComponent: null,
-            history: {
-              ...state.history,
-              currentIndex: index
-            }
-          });
-          return true;
-        }
-        return false;
-      },
-      // Subscription methods
-      updateSubscriptionInfo: (subscriptionInfo: SubscriptionInfo) => {
-        set((state) => {
-          const newHistory = { ...state.history };
-          newHistory.maxHistorySize = getHistorySize(subscriptionInfo);
-          
-          // If the new limit is smaller than current history, trim it
-          if (newHistory.snapshots.length > newHistory.maxHistorySize) {
-            newHistory.snapshots = newHistory.snapshots.slice(-newHistory.maxHistorySize);
-            newHistory.currentIndex = Math.min(newHistory.currentIndex, newHistory.snapshots.length - 1);
-          }
-          
-          return {
-            subscriptionInfo,
-            history: newHistory
-          };
-        });
+export const useFormBuilderStore = create<FormBuilderStore>()((set, get) => ({
+  mode: "editor",
+  viewport: "sm",
+  showJson: false,
+  formId: null,
+  formTitle: "",
+  loadedTemplateId: null,
+  loadedTemplate: null,
+  editor: null,
+  enableDragging: true,
+  history: initializeHistory(),
+  subscriptionInfo: null,
+  schema: cloneSchema(EMPTY_SCHEMA),
+  selectedComponentId: null,
+  updateMode: (mode) => set({ mode }),
+  updateViewport: (viewport) => set({ viewport }),
+  toggleJsonPreview: () => set((state) => ({ showJson: !state.showJson })),
+  updateFormTitle: (title) => set({ formTitle: title }),
+  updateFormId: (id) => set({ formId: id }),
+  setEditor: (editor) => set({ editor }),
+  updateEnableDragging: (enableDragging) => set({ enableDragging }),
+  addComponent: (component) => {
+    const state = get();
+    const newNode = modelToNode(component);
+    const nextSchema = cloneSchema(state.schema);
+    const newId = generateUniqueComponentId(newNode, nextSchema.components);
+    newNode.id = newId;
+    newNode.attributes = {
+      ...(newNode.attributes ?? {}),
+      id: newId,
+    };
+    nextSchema.components.push(newNode);
+    set({
+      schema: nextSchema,
+      selectedComponentId: newId,
+    });
+    get().saveSnapshot();
+    return new FormComponentModel(deepClone(newNode));
+  },
+  removeComponent: (componentId) => {
+    set((state) => {
+      const nextSchema = {
+        ...state.schema,
+        components: state.schema.components.filter((component) => component.id !== componentId),
+      };
+      return {
+        schema: nextSchema,
+        selectedComponentId:
+          state.selectedComponentId === componentId ? null : ensureSelection(nextSchema, state.selectedComponentId),
+      };
+    });
+    get().saveSnapshot();
+  },
+  updateComponent: (componentId, field, value, isValidForAllViewports = false, isDragging = false) => {
+    set((state) => {
+      const nextSchema = cloneSchema(state.schema);
+      const index = findComponentIndex(nextSchema.components, componentId);
+      if (index === -1) {
+        return {} as Partial<FormBuilderStore>;
       }
-    })
-);
+      const updated = updateComponentNode(
+        nextSchema.components[index],
+        field.split("."),
+        value,
+        state.viewport,
+        isValidForAllViewports
+      );
+      nextSchema.components[index] = updated;
+      return {
+        schema: nextSchema,
+        selectedComponentId: isDragging ? null : state.selectedComponentId,
+      };
+    });
+    if (!isDragging) {
+      get().saveSnapshot();
+    }
+  },
+  updateComponents: (components) => {
+    set((state) => {
+      const nextSchema: FormSchema = {
+        components: components.map((component) => deepClone(component)),
+      };
+      return {
+        schema: nextSchema,
+        selectedComponentId: ensureSelection(nextSchema, state.selectedComponentId),
+      };
+    });
+    get().saveSnapshot();
+  },
+  selectComponent: (componentId) => {
+    const state = get();
+    const nextId = componentId ? componentId : null;
+    const editor = nextId
+      ? state.schema.components.find((component) => component.id === nextId)?.category === "form"
+        ? state.editor
+        : null
+      : null;
+    set({
+      selectedComponentId: nextId,
+      editor,
+    });
+  },
+  moveComponent: (oldIndex, newIndex) => {
+    set((state) => {
+      const components = [...state.schema.components];
+      const [movedComponent] = components.splice(oldIndex, 1);
+      components.splice(newIndex, 0, movedComponent);
+      return {
+        schema: { ...state.schema, components },
+        selectedComponentId: null,
+      };
+    });
+    get().saveSnapshot();
+  },
+  duplicateComponent: (componentId) => {
+    const state = get();
+    const index = findComponentIndex(state.schema.components, componentId);
+    if (index === -1) {
+      console.warn(`Component with id ${componentId} not found for duplication`);
+      return;
+    }
+    const duplicated = deepClone(state.schema.components[index]);
+    const nextSchema = cloneSchema(state.schema);
+    const newId = generateUniqueComponentId(duplicated, nextSchema.components);
+    duplicated.id = newId;
+    duplicated.attributes = {
+      ...(duplicated.attributes ?? {}),
+      id: newId,
+    };
+    nextSchema.components.splice(index + 1, 0, duplicated);
+    set({
+      schema: nextSchema,
+      selectedComponentId: newId,
+    });
+    get().saveSnapshot();
+  },
+  applyTemplate: (templateData, options) => {
+    const nextSchema: FormSchema = {
+      components: templateData.components.map((component) => deepClone(component)),
+    };
+    set((state) => ({
+      schema: nextSchema,
+      formTitle: templateData.formTitle,
+      loadedTemplateId: options?.templateKey ?? null,
+      loadedTemplate: templateData,
+      selectedComponentId: null,
+    }));
+    const { clearHistory, saveSnapshot } = get();
+    clearHistory();
+    saveSnapshot();
+  },
+  clearForm: () => {
+    set({
+      schema: cloneSchema(EMPTY_SCHEMA),
+      selectedComponentId: null,
+      formTitle: "",
+      formId: null,
+    });
+    get().clearHistory();
+    get().saveSnapshot();
+  },
+  saveSnapshot: () => {
+    const state = get();
+    const snapshot = createSnapshot(state.schema, state.formTitle, state.formId);
+    set((current) => {
+      const history = { ...current.history };
+
+      if (current.subscriptionInfo && !canSaveSnapshot(history.snapshots.length, current.subscriptionInfo)) {
+        if (history.snapshots.length > 0) {
+          history.snapshots = history.snapshots.slice(0, history.snapshots.length - 1);
+          history.currentIndex = Math.min(history.currentIndex, history.snapshots.length - 1);
+        }
+      }
+
+      const branchIndex = history.currentIndex >= 0 ? history.currentIndex : 0;
+      history.snapshots = history.snapshots.slice(branchIndex);
+      history.snapshots.unshift(snapshot);
+      history.currentIndex = 0;
+
+      if (current.subscriptionInfo) {
+        history.maxHistorySize = getHistorySize(current.subscriptionInfo);
+      }
+
+      if (history.snapshots.length > history.maxHistorySize) {
+        history.snapshots = history.snapshots.slice(0, history.maxHistorySize);
+        history.currentIndex = Math.min(history.currentIndex, history.snapshots.length - 1);
+      }
+
+      return { history };
+    });
+  },
+  undo: () => {
+    const state = get();
+    if (state.history.currentIndex < state.history.snapshots.length - 1) {
+      const nextIndex = state.history.currentIndex + 1;
+      const snapshot = state.history.snapshots[nextIndex];
+      if (!snapshot) {
+        return false;
+      }
+      set({
+        schema: cloneSchema(snapshot.schema),
+        formTitle: snapshot.formTitle,
+        formId: snapshot.formId,
+        history: {
+          ...state.history,
+          currentIndex: nextIndex,
+        },
+        selectedComponentId: null,
+      });
+      return true;
+    }
+    return false;
+  },
+  redo: () => {
+    const state = get();
+    if (state.history.currentIndex > 0) {
+      const nextIndex = state.history.currentIndex - 1;
+      const snapshot = state.history.snapshots[nextIndex];
+      if (!snapshot) {
+        return false;
+      }
+      set({
+        schema: cloneSchema(snapshot.schema),
+        formTitle: snapshot.formTitle,
+        formId: snapshot.formId,
+        history: {
+          ...state.history,
+          currentIndex: nextIndex,
+        },
+        selectedComponentId: null,
+      });
+      return true;
+    }
+    return false;
+  },
+  canUndo: () => {
+    const state = get();
+    return state.history.currentIndex < state.history.snapshots.length - 1;
+  },
+  canRedo: () => {
+    const state = get();
+    return state.history.currentIndex > 0;
+  },
+  clearHistory: () => set((state) => ({
+    history: initializeHistory(state.subscriptionInfo),
+  })),
+  jumpToSnapshot: (index) => {
+    const state = get();
+    const snapshot = state.history.snapshots[index];
+    if (!snapshot) {
+      return false;
+    }
+    set({
+      schema: cloneSchema(snapshot.schema),
+      formTitle: snapshot.formTitle,
+      formId: snapshot.formId,
+      history: {
+        ...state.history,
+        currentIndex: index,
+      },
+      selectedComponentId: ensureSelection(snapshot.schema, state.selectedComponentId),
+    });
+    return true;
+  },
+  updateSubscriptionInfo: (subscriptionInfo) =>
+    set((state) => ({
+      subscriptionInfo,
+      history: {
+        ...state.history,
+        maxHistorySize: getHistorySize(subscriptionInfo),
+      },
+    })),
+}));

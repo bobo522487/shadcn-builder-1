@@ -13,7 +13,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useFormBuilderStore } from "@/stores/form-builder-store";
 import { useState } from "react";
-import { FormComponentModel } from "@/models/FormComponent";
 
 export function OpenJsonDialog() {
   const [open, setOpen] = useState(false);
@@ -31,7 +30,7 @@ export function OpenJsonDialog() {
       }
 
       // Convert the parsed JSON into FormRow objects
-      const components: FormComponentModel[] = parsedJson.map((comp: any) => new FormComponentModel(comp));
+      const components = parsedJson.map((comp: any) => JSON.parse(JSON.stringify(comp)));
 
       updateComponents(components);
       setOpen(false);

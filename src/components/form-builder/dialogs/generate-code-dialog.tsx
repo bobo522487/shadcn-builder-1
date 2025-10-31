@@ -8,6 +8,7 @@ import { generateFormCode } from "../helpers/generate-react-code";
 import { useFormBuilderStore } from "@/stores/form-builder-store";
 import { ReactCode } from "@/types/form-builder.types";
 import { DependenciesImports } from "../helpers/generate-react-code";
+import { useComponentModels } from "@/hooks/useComponentModels";
 
 const getShadcnInstallInstructions = (
   dependencies: ReactCode["dependencies"]
@@ -30,7 +31,7 @@ const getThirdPartyDependenciesInstallInstructions = (
 };
 
 export function MainExport() {
-  const components = useFormBuilderStore((state) => state.components);
+  const components = useComponentModels();
   const [generatedCode, setGeneratedCode] = useState<{
     code: string;
     dependenciesImports: DependenciesImports;

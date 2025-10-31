@@ -15,6 +15,7 @@ import { Over, useDraggable, useDroppable } from "@dnd-kit/core";
 import { FormComponentModel } from "@/models/FormComponent";
 import { memo, useCallback, useMemo } from "react";
 import * as Icons from "lucide-react";
+import { useComponentModels, useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 interface SortableRowProps {
   component: FormComponentModel;
@@ -53,11 +54,9 @@ export const RowColumn = ({ component, index, form }: SortableRowProps) => {
     },
   });
 
-  const components = useFormBuilderStore((state) => state.components);
+  const components = useComponentModels();
   const viewport = useFormBuilderStore((state) => state.viewport);
-  const selectedComponent = useFormBuilderStore(
-    (state) => state.selectedComponent
-  );
+  const selectedComponent = useSelectedComponentModel();
   const selectComponent = useFormBuilderStore((state) => state.selectComponent);
   const removeComponent = useFormBuilderStore((state) => state.removeComponent);
   const updateComponent = useFormBuilderStore((state) => state.updateComponent);
@@ -94,7 +93,7 @@ export const RowColumn = ({ component, index, form }: SortableRowProps) => {
     (e: React.MouseEvent) => {
       if (mode === "editor" && !columnIsDragging) {
         e.stopPropagation();
-        selectComponent(component);
+        selectComponent(component.id);
       }
     },
     [component, selectComponent, mode, columnIsDragging]

@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 type InputTypeValidationMap = {
   [key in FormComponentTypes]: string[];
@@ -51,7 +52,8 @@ const VALIDATION_OPTIONS = [
 ];
 
 export function ValidationGroup() {
-  const { updateComponent, selectedComponent } = useFormBuilderStore();
+  const updateComponent = useFormBuilderStore((state) => state.updateComponent);
+  const selectedComponent = useSelectedComponentModel();
 
   const validations = selectedComponent?.getField("validations") || {};
 

@@ -1,29 +1,32 @@
 import { renderHook, act } from '@testing-library/react';
-import { useFormBuilderStore } from '@/stores/form-builder-store';
-import { useHistory } from '@/hooks/use-history';
-import { FormComponentModel } from '@/models/FormComponent';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { useFormBuilderStore } from '../../stores/form-builder-store';
+import { useHistory } from '../../hooks/use-history';
 
 // Mock the store for testing
-jest.mock('@/stores/form-builder-store');
+vi.mock('@/stores/form-builder-store');
 
 describe('useHistory', () => {
   const mockStore = {
-    undo: jest.fn(),
-    redo: jest.fn(),
-    canUndo: jest.fn(),
-    canRedo: jest.fn(),
-    saveSnapshot: jest.fn(),
-    clearHistory: jest.fn(),
+    undo: vi.fn(),
+    redo: vi.fn(),
+    canUndo: vi.fn(),
+    canRedo: vi.fn(),
+    saveSnapshot: vi.fn(),
+    clearHistory: vi.fn(),
+    jumpToSnapshot: vi.fn(),
     history: {
       snapshots: [],
       currentIndex: -1,
       maxHistorySize: 50
-    }
+    },
+    subscriptionInfo: null
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useFormBuilderStore as jest.Mock).mockReturnValue(mockStore);
+    vi.clearAllMocks();
+    (useFormBuilderStore as unknown as Mock).mockReturnValue(mockStore);
   });
 
   it('should return history methods and state', () => {
@@ -50,8 +53,8 @@ describe('useHistory', () => {
   it('should return computed properties correctly', () => {
     mockStore.history = {
       snapshots: [
-        { components: [], formTitle: 'Form 1', formId: '1', timestamp: 1 },
-        { components: [], formTitle: 'Form 2', formId: '2', timestamp: 2 }
+        { schema: { components: [] }, formTitle: 'Form 1', formId: '1', timestamp: 1 },
+        { schema: { components: [] }, formTitle: 'Form 2', formId: '2', timestamp: 2 }
       ],
       currentIndex: 1,
       maxHistorySize: 50

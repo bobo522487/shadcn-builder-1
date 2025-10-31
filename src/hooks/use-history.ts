@@ -45,7 +45,7 @@ export const useHistory = () => {
     
     // Computed properties
     hasHistory: history.snapshots.length > 1,
-    isAtBeginning: history.currentIndex === 0,
-    isAtEnd: history.currentIndex === history.snapshots.length - 1
+    isAtBeginning: history.currentIndex <= 0,
+    isAtEnd: history.currentIndex === history.snapshots.length - 1 || history.snapshots.length === 0
   };
 };

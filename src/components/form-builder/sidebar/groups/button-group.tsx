@@ -13,6 +13,7 @@ import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { CornerDownRightIcon } from "lucide-react";
 import { ToggleGroupNav } from "../../ui/toggle-group-nav";
+import { useSelectedComponentModel } from "@/hooks/useComponentModels";
 
 type propertiesWhitelist = "type" | "content" | "variant" | "icon";
 
@@ -23,7 +24,8 @@ export type ButtonGroupProps = {
 export function ButtonGroup({
   whitelist = ["type", "content", "variant", "icon"],
 }: ButtonGroupProps) {
-  const { updateComponent, selectedComponent } = useFormBuilderStore();
+  const updateComponent = useFormBuilderStore((state) => state.updateComponent);
+  const selectedComponent = useSelectedComponentModel();
 
   if (!selectedComponent) {
     return null;
