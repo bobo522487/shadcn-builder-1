@@ -1,3 +1,16 @@
+## [1.5.0](https://github.com/iduspara/shadcn-builder/compare/v1.4.0...v1.5.0) (2025-10-31)
+
+
+### Features
+
+* added native select component ([92fc5c2](https://github.com/iduspara/shadcn-builder/commit/92fc5c23bebaa15ccdc42bb8eaa8ac03b289efc2))
+
+
+### Bug Fixes
+
+* fix semantic release branch ([8f70bb8](https://github.com/iduspara/shadcn-builder/commit/8f70bb851dc073f2200e6fc158aa9fabc0e78474))
+* fixed background for switch component when selected ([c04e6a6](https://github.com/iduspara/shadcn-builder/commit/c04e6a60c3c2ab2c0c6a4fa502a26e099e4abdd5))
+
 ## [1.4.0](https://github.com/iduspara/shadcn-builder/compare/v1.3.0...v1.4.0) (2025-10-30)
 
 
