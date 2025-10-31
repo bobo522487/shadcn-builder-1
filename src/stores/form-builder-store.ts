@@ -1,23 +1,14 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { FormBuilderStore, TemplateData, Viewports, HistorySnapshot, HistoryState } from "@/types/form-builder.types";
 import { FormComponentModel } from "@/models/FormComponent";
 import { Editor } from "@tiptap/react";
 import { SubscriptionInfo, DEFAULT_HISTORY_SIZE } from "@/types/subscription.types";
 import { getHistorySize, canSaveSnapshot } from "@/lib/history-utils";
+import { createComponentId } from "@/lib/id";
 
-const generateComponentId = (
-  component: FormComponentModel,
-  components: FormComponentModel[]
-): string => {
-  const existingTypes = components.filter((comp) =>
-    comp.getField("type").startsWith(component.getField("type"))
-  );
-
-  let counter = existingTypes.length;
-  let newId = `${component.getField("id")}-${counter}`;
-
-  return newId;
+const generateComponentId = (component: FormComponentModel): string => {
+  const prefix = component.getField("type") || "component";
+  return createComponentId(prefix);
 };
 
 // History management functions
@@ -33,41 +24,6 @@ const initializeHistory = (subscriptionInfo?: SubscriptionInfo | null): HistoryS
   currentIndex: -1,
   maxHistorySize: subscriptionInfo ? getHistorySize(subscriptionInfo) : DEFAULT_HISTORY_SIZE
 });
-
-// Template loading function
-const loadTemplate = async (templateName: string, templateKey?: string): Promise<TemplateData | null> => {
-  try {    
-    const response = await fetch(`/templates/${templateName}.json`);
-    if (!response.ok) {
-      throw new Error(`Failed to load template: ${templateName} - Status: ${response.status}`);
-    }
-    
-    const templateData = await response.json();
-    
-    // If templateKey is provided, look for that specific template within the file
-    const template = templateKey ? templateData[templateKey] : Object.values(templateData)[0];
-    
-    if (!template || !template.components) {
-      throw new Error(`Template not found: ${templateKey || 'default'} in ${templateName}.json`);
-    }
-        
-    // Convert template components to FormComponentModel instances
-    const components = template.components.map((component: any) => {
-      return new FormComponentModel(component);
-    });
-    
-    return {
-      components,
-      formTitle: template.formTitle,
-      formDescription: template.formDescription,
-      tags: template.tags,
-      category: template.category
-    };
-  } catch (error) {
-    console.error('Error loading template:', (error as Error).message);
-    throw error;
-  }
-};
 
 export const useFormBuilderStore = create<FormBuilderStore>()(
     (set, get) => ({
@@ -95,7 +51,7 @@ export const useFormBuilderStore = create<FormBuilderStore>()(
       setEditor: (editor: Editor | null) => set({ editor }),
       addComponent: (component: FormComponentModel) => {
         const newComponent = new FormComponentModel({ ...component });
-        let newId = generateComponentId(newComponent, get().components);
+        let newId = generateComponentId(newComponent);
         newComponent.id = newId;
         newComponent.attributes = {
           ...newComponent.attributes,
@@ -242,7 +198,7 @@ export const useFormBuilderStore = create<FormBuilderStore>()(
         const duplicatedComponent = new FormComponentModel({ ...componentToDuplicate });
         
         // Generate a new unique ID
-        const newId = generateComponentId(duplicatedComponent, state.components);
+        const newId = generateComponentId(duplicatedComponent);
         duplicatedComponent.id = newId;
         duplicatedComponent.attributes = {
           ...duplicatedComponent.attributes,
@@ -258,24 +214,18 @@ export const useFormBuilderStore = create<FormBuilderStore>()(
         // Save snapshot after duplicating component
         get().saveSnapshot();
       },
-      loadTemplate: async (templateName: string, templateKey?: string) => {
-        const templateData = await loadTemplate(templateName, templateKey);
-        if (templateData) {
-          set({
-            components: templateData.components,
-            formTitle: templateData.formTitle,
-            selectedComponent: null,
-            mode: "editor",
-            loadedTemplateId: templateKey || null,
-            loadedTemplate: templateData
-          });
-          
-          // Clear history and save initial snapshot when loading template
-          get().clearHistory();
-          get().saveSnapshot();
-          return true;
-        }
-        return false;
+      applyTemplate: (templateData: TemplateData, options?: { templateKey?: string }) => {
+        set({
+          components: templateData.components.map((component) => new FormComponentModel({ ...component })),
+          formTitle: templateData.formTitle,
+          selectedComponent: null,
+          mode: "editor",
+          loadedTemplateId: options?.templateKey ?? null,
+          loadedTemplate: templateData
+        });
+        
+        get().clearHistory();
+        get().saveSnapshot();
       },
       clearForm: () => {
         set({

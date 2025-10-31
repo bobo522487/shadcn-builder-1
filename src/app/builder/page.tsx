@@ -25,6 +25,7 @@ import { useForm } from "react-hook-form";
 import { cn, getGridRows, updateColSpans } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { useAuthState } from "@/hooks/use-auth";
+import { fetchTemplate } from "@/lib/templates";
 
 export default function FormBuilderPage() {
   const isMobile = useIsMobile();
@@ -36,7 +37,7 @@ export default function FormBuilderPage() {
   const loadedTemplateId = useFormBuilderStore(
     (state) => state.loadedTemplateId
   );
-  const loadTemplate = useFormBuilderStore((state) => state.loadTemplate);
+  const applyTemplate = useFormBuilderStore((state) => state.applyTemplate);
   const components = useFormBuilderStore((state) => state.components);
   const selectComponent = useFormBuilderStore((state) => state.selectComponent);
   const formTitle = useFormBuilderStore((state) => state.formTitle);
@@ -54,26 +55,25 @@ export default function FormBuilderPage() {
     const templateKey = searchParams.get("key");
 
     if (template && loadedTemplateId !== templateKey && !isLoadingTemplate) {
-      setIsLoadingTemplate(true);
-      loadTemplate(template, templateKey || undefined)
-        .then((success) => {
-          if (success) {
-            console.log(
-              `Template loaded successfully: ${template}${templateKey ? ` (${templateKey})` : ""}`
-            );
-          } else {
-            window.location.href = "/";
-          }
-        })
-        .catch((error) => {
+      const run = async () => {
+        try {
+          const templateData = await fetchTemplate(template, templateKey || undefined);
+          applyTemplate(templateData, { templateKey: templateKey || undefined });
+          console.log(
+            `Template loaded successfully: ${template}${templateKey ? ` (${templateKey})` : ""}`
+          );
+        } catch (error) {
           console.error("Error loading template:", error);
           window.location.href = "/";
-        })
-        .finally(() => {
+        } finally {
           setIsLoadingTemplate(false);
-        });
+        }
+      };
+
+      setIsLoadingTemplate(true);
+      run();
     }
-  }, [isLoadingTemplate, loadTemplate, loadedTemplateId, searchParams]);
+  }, [isLoadingTemplate, applyTemplate, loadedTemplateId, searchParams]);
 
   // Show welcome dialog when no template is loaded and no components exist
   useEffect(() => {

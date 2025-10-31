@@ -80,7 +80,7 @@ export interface FormBuilderStore {
   selectComponent: (component: FormComponentModel | null) => void;
   moveComponent: (oldIndex: number, newIndex: number) => void;
   duplicateComponent: (componentId: string) => void;
-  loadTemplate: (templateName: string, templateKey?: string) => Promise<boolean>;
+  applyTemplate: (templateData: TemplateData, options?: { templateKey?: string }) => void;
   clearForm: () => void;
   // History methods
   saveSnapshot: () => void;
