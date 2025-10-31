@@ -25,12 +25,10 @@ export interface FormComponentProps {
 }
 
 export function RenderEditorComponent({ form, component }: FormComponentProps) {
-  const { viewport, updateComponent, updateEnableDragging, selectComponent } = useFormBuilderStore((state) => ({
-    viewport: state.viewport,
-    updateComponent: state.updateComponent,
-    updateEnableDragging: state.updateEnableDragging,
-    selectComponent: state.selectComponent,
-  }));
+  const viewport = useFormBuilderStore((state) => state.viewport);
+  const updateComponent = useFormBuilderStore((state) => state.updateComponent);
+  const updateEnableDragging = useFormBuilderStore((state) => state.updateEnableDragging);
+  const selectComponent = useFormBuilderStore((state) => state.selectComponent);
   const selectedComponent = useSelectedComponentModel();
   const mode = useFormBuilderStore((state) => state.mode);
 
